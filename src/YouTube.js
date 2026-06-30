@@ -25,9 +25,16 @@ class YouTube {
         } else if (config.ytdl.cookiesFromBrowser) {
             baseOptions.cookiesFromBrowser = config.ytdl.cookiesFromBrowser;
         } else if (config.ytdl.cookiesFile) {
-            baseOptions.cookies = config.ytdl.cookiesFile;
+            // Copy cookies to temp location to avoid read-only filesystem errors
+            const fs = require('fs');
+            const tempCookies = `/tmp/cookies_${Date.now()}.txt`;
+            if (fs.existsSync(config.ytdl.cookiesFile)) {
+                fs.copyFileSync(config.ytdl.cookiesFile, tempCookies);
+                baseOptions.cookies = tempCookies;
+            } else {
+                baseOptions.cookies = config.ytdl.cookiesFile;
+            }
             baseOptions.extractorArgs = 'youtubetab:skip=authcheck';
-            baseOptions.noSaveCookies = true;
         } else {
             // Auth yapılandırılmamışsa iOS client kullan.
             // Bu, VPS/sunucu IP'lerinde YouTube'un bot tespitini cookie veya token gerektirmeden atlar.
