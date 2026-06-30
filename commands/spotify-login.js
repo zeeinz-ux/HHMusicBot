@@ -1,10 +1,11 @@
-const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle } = require('discord.js');
+const { SlashCommandBuilder, EmbedBuilder, ActionRowBuilder, ButtonBuilder, ButtonStyle, PermissionFlagsBits } = require('discord.js');
 const Spotify = require('../src/Spotify');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('spotify-login')
-        .setDescription('Login to Spotify to enable playlist support'),
+        .setDescription('Login to Spotify to enable playlist support')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator),
 
     async execute(interaction, client) {
         await interaction.deferReply({ flags: [1 << 6] });

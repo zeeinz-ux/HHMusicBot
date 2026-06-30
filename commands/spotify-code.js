@@ -1,10 +1,11 @@
-const { SlashCommandBuilder } = require('discord.js');
+const { SlashCommandBuilder, PermissionFlagsBits } = require('discord.js');
 const Spotify = require('../src/Spotify');
 
 module.exports = {
     data: new SlashCommandBuilder()
         .setName('spotify-code')
         .setDescription('Set Spotify authorization code (get from URL after login)')
+        .setDefaultMemberPermissions(PermissionFlagsBits.Administrator)
         .addStringOption(option =>
             option.setName('code')
                 .setDescription('The authorization code from the callback URL')
