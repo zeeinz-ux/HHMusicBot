@@ -26,7 +26,7 @@ module.exports = {
         defaultVolume: 100,
         maxQueueSize: 100,
         maxPlaylistSize: 50,
-        status: process.env.STATUS || '🎵 Beatra | /play',
+        status: process.env.STATUS || '🎵 HHMusic | /play',
         embedColor: process.env.EMBED_COLOR || '#FF6B6B',
         supportServer: process.env.SUPPORT_SERVER || 'https://discord.gg/ACJQzJuckW',
         website: process.env.WEBSITE || 'https://beatra.app',

@@ -1,11 +1,11 @@
 @echo off
 color 1F
-title Beatra - Bot Launcher
+title HHMusic - Bot Launcher
 cd /d "%~dp0"
 
 echo.
 echo ==========================================
-echo    BEATRA BOT STARTING...
+echo    HHMUSIC BOT STARTING...
 echo ==========================================
 echo.
 echo Choose startup mode:

@@ -1,6 +1,6 @@
 <div align="center">
 
-# Beatra v16.0 🎶
+# HHMusic v16.0 🎶
 
 ## WE DO NOT PROVIDE ANY SUPPORT FOR THIS OPEN-SOURCE PROJECT, WHETHER IT INVOLVES SOFTWARE ISSUES OR BUG-RELATED PROBLEMS. PLEASE DO NOT CONTACT US FOR ASSISTANCE WITH ANY ISSUES OR ERRORS YOU ENCOUNTER IN THIS PROJECT!
 
@@ -9,7 +9,7 @@
 ![GitHub Issues](https://img.shields.io/github/issues/umutxyp/musicbot)
 ![GitHub License](https://img.shields.io/github/license/umutxyp/musicbot)
 
-[Invite the public Beatra bot](https://discord.com/oauth2/authorize?client_id=774043716797071371&permissions=277028620608&scope=applications.commands%20bot) • [Beatra Web Dashboard](https://beatra.app) • [Codeshare](https://codeshare.me)
+[Invite the public HHMusic bot](https://discord.com/oauth2/authorize?client_id=774043716797071371&permissions=277028620608&scope=applications.commands%20bot) • [HHMusic Web Dashboard](https://beatra.app) • [Codeshare](https://codeshare.me)
 
 ## Project Highlights
 | Capability | Details |
@@ -28,7 +28,7 @@
 
 ---
 
-## ✨ Why Beatra?
+## ✨ Why HHMusic?
 
 - **Slash-first UX** – `/play`, `/search`, `/language`, `/nowplaying`, and `/help` respond instantly with localized embeds and live-updating buttons.
 - **Platform polyglot** – Streams from YouTube, Spotify, SoundCloud, or a direct MP3/WAV/OGG link. Spotify albums, playlists, and artist radios turn into fully hydrated queues.
@@ -127,7 +127,7 @@ Slash commands register automatically when the bot starts. Guild-scoped deployme
 
 ## Configuration
 
-Beatra reads from both `config.js` defaults and environment variables via `.env`. Update whichever approach fits your hosting workflow.
+HHMusic reads from both `config.js` defaults and environment variables via `.env`. Update whichever approach fits your hosting workflow.
 
 ### `.env` Cheat Sheet
 
@@ -139,7 +139,7 @@ SPOTIFY_CLIENT_ID=spotify_client_id
 SPOTIFY_CLIENT_SECRET=spotify_client_secret
 GENIUS_CLIENT_ID=optional_genius_client_id
 GENIUS_CLIENT_SECRET=optional_genius_client_secret
-STATUS=🎵 Beatra | /play
+STATUS=🎵 HHMusic | /play
 EMBED_COLOR=#FF6B6B
 SUPPORT_SERVER=https://discord.gg/ACJQzJuckW
 WEBSITE=https://beatra.app
@@ -168,7 +168,7 @@ COOKIES_FILE=./cookies.txt
 ## Spotify API Setup
 
 1. Visit the [Spotify Developer Dashboard](https://developer.spotify.com/dashboard/), sign in, and click **Create an App**.
-2. Name your integration (e.g., `Beatra Bot`) and enable **Web API**.
+2. Name your integration (e.g., `HHMusic Bot`) and enable **Web API**.
 3. Reveal and copy the **Client ID** and **Client Secret**.
 4. Add a redirect URI (any valid URL, e.g., `https://localhost/callback`) – although client credentials flow is used, Spotify requires at least one placeholder.
 5. Paste both values into your `.env` (`SPOTIFY_CLIENT_ID`, `SPOTIFY_CLIENT_SECRET`).
@@ -180,7 +180,7 @@ Without these credentials Spotify requests fall back to zero results.
 
 ## Genius API Setup (Optional)
 
-Beatra uses **web scraping** by default to fetch lyrics from Genius—no API key required! However, if you want **higher rate limits** and **faster responses**, you can optionally add Genius API credentials.
+HHMusic uses **web scraping** by default to fetch lyrics from Genius—no API key required! However, if you want **higher rate limits** and **faster responses**, you can optionally add Genius API credentials.
 
 ### Why Use Genius API?
 
@@ -194,7 +194,7 @@ Beatra uses **web scraping** by default to fetch lyrics from Genius—no API key
 
 1. Visit the [Genius API Clients Page](https://genius.com/api-clients), sign in with your Genius account (or create one).
 2. Click **New API Client** and fill in:
-   - **App Name:** `Beatra Bot` (or any name)
+   - **App Name:** `HHMusic Bot` (or any name)
    - **App Website URL:** `https://localhost` (placeholder is fine)
    - **Redirect URI:** `https://localhost/callback` (not used, but required)
 3. Click **Save** and reveal your **Client ID** and **Client Secret**.
@@ -279,7 +279,7 @@ If you still see bot detection errors:
 
 ## Sharding for Large Bots (1000+ Servers)
 
-When your bot reaches **1,000+ servers**, Discord **requires** you to use sharding to distribute the load across multiple processes. Beatra includes a fully automated sharding system powered by Discord.js's `ShardingManager`.
+When your bot reaches **1,000+ servers**, Discord **requires** you to use sharding to distribute the load across multiple processes. HHMusic includes a fully automated sharding system powered by Discord.js's `ShardingManager`.
 
 > 📚 **[Read the complete Sharding Guide](./SHARDING.md)** for detailed documentation, troubleshooting, and best practices.
 
@@ -431,7 +431,7 @@ All button sessions carry a short-lived signature, preventing stale interactions
 
 ## 🎲 Autoplay System
 
-Beatra features an intelligent autoplay engine that keeps the music flowing when your queue runs out.
+HHMusic features an intelligent autoplay engine that keeps the music flowing when your queue runs out.
 
 ### How It Works
 
@@ -517,7 +517,7 @@ Watch the autoplay engine work in real-time:
 
 ## 💾 Local Audio Cache System
 
-Beatra eliminates playback interruptions by pre-downloading and caching all audio locally before streaming to Discord.
+HHMusic eliminates playback interruptions by pre-downloading and caching all audio locally before streaming to Discord.
 
 ### Why Local Caching?
 
@@ -527,7 +527,7 @@ Traditional Discord bots stream directly from YouTube/Spotify/SoundCloud URLs, w
 - ❌ Stream failures during Discord voice server load spikes
 - ❌ Quality drops when network conditions fluctuate
 
-**Beatra's solution:**
+**HHMusic's solution:**
 - ✅ Downloads entire tracks to `audio_cache/` before playback
 - ✅ Streams from local disk at consistent quality
 - ✅ Zero dependency on external stream stability during playback

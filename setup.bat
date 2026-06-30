@@ -1,11 +1,11 @@
 @echo off
 color 0A
-title Beatra - Setup
+title HHMusic - Setup
 cd /d "%~dp0"
 
 echo.
 echo ==========================================
-echo    BEATRA SETUP
+echo    HHMUSIC SETUP
 echo ==========================================
 echo.
 echo Installing dependencies...

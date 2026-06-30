@@ -1,11 +1,11 @@
 @echo off
 color 1F
-title Beatra - Sharding Mode
+title HHMusic - Sharding Mode
 cd /d "%~dp0"
 
 echo.
 echo ==========================================
-echo    BEATRA BOT - SHARDING MODE
+echo    HHMUSIC BOT - SHARDING MODE
 echo ==========================================
 echo.
 echo Starting bot with automatic sharding...

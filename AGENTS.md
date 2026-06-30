@@ -1,4 +1,4 @@
-# MusicBot (Beatra v16.0) — Agent Guide
+# MusicBot (HHMusic v16.0) — Agent Guide
 
 ## Quick Start
 
