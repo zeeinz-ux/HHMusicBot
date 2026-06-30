@@ -1,25 +1,98 @@
 const SpotifyWebApi = require('spotify-web-api-node');
 const config = require('../config');
 const LanguageManager = require('./LanguageManager');
+const fs = require('fs');
+const path = require('path');
+
+const TOKEN_PATH = path.join(__dirname, '..', 'database', 'spotify_token.json');
 
 class Spotify {
     static spotifyApi = null;
     static tokenExpiresAt = 0;
+    static refreshToken = null;
+
+    static loadStoredToken() {
+        try {
+            if (fs.existsSync(TOKEN_PATH)) {
+                const data = JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf8'));
+                if (data.refreshToken) {
+                    this.refreshToken = data.refreshToken;
+                    console.log('[Spotify] Loaded stored refresh token');
+                }
+            }
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    static saveStoredToken() {
+        try {
+            const dir = path.dirname(TOKEN_PATH);
+            if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(TOKEN_PATH, JSON.stringify({ refreshToken: this.refreshToken }, null, 2));
+        } catch (e) {
+            // ignore
+        }
+    }
+
+    static getAuthUrl() {
+        const redirectUri = `https://hhmusicbot-hhmusic.up.railway.app/spotify-callback`;
+        const scopes = ['playlist-read-private', 'playlist-read-collaborative'];
+        const api = new SpotifyWebApi({ clientId: config.spotify.clientId, clientSecret: config.spotify.clientSecret, redirectUri });
+        return api.createAuthorizeURL(scopes, 'spotify_auth');
+    }
+
+    static async exchangeCode(code) {
+        const redirectUri = `https://hhmusicbot-hhmusic.up.railway.app/spotify-callback`;
+        const api = new SpotifyWebApi({ clientId: config.spotify.clientId, clientSecret: config.spotify.clientSecret, redirectUri });
+        const data = await api.authorizationCodeGrant(code);
+        this.refreshToken = data.body.refresh_token;
+        this.saveStoredToken();
+        // Re-init the main API with user tokens
+        this.spotifyApi = new SpotifyWebApi({
+            clientId: config.spotify.clientId,
+            clientSecret: config.spotify.clientSecret,
+            redirectUri,
+            refreshToken: this.refreshToken,
+        });
+        this.spotifyApi.setAccessToken(data.body.access_token);
+        this.tokenExpiresAt = Date.now() + (data.body.expires_in * 1000);
+        console.log('[Spotify] OAuth tokens acquired successfully');
+    }
 
     static async initializeApi() {
+        // Load stored token on first call
+        if (this.refreshToken === null) this.loadStoredToken();
+
         if (!this.spotifyApi) {
-            this.spotifyApi = new SpotifyWebApi({
-                clientId: config.spotify.clientId,
-                clientSecret: config.spotify.clientSecret,
-            });
+            const redirectUri = `https://hhmusicbot-hhmusic.up.railway.app/spotify-callback`;
+            if (this.refreshToken) {
+                this.spotifyApi = new SpotifyWebApi({
+                    clientId: config.spotify.clientId,
+                    clientSecret: config.spotify.clientSecret,
+                    redirectUri,
+                    refreshToken: this.refreshToken,
+                });
+            } else {
+                this.spotifyApi = new SpotifyWebApi({
+                    clientId: config.spotify.clientId,
+                    clientSecret: config.spotify.clientSecret,
+                });
+            }
         }
 
         // Check if token needs refresh
         if (Date.now() >= this.tokenExpiresAt) {
             try {
-                const data = await this.spotifyApi.clientCredentialsGrant();
-                this.spotifyApi.setAccessToken(data.body.access_token);
-                this.tokenExpiresAt = Date.now() + (data.body.expires_in * 1000);
+                if (this.refreshToken) {
+                    const data = await this.spotifyApi.refreshAccessToken();
+                    this.spotifyApi.setAccessToken(data.body.access_token);
+                    this.tokenExpiresAt = Date.now() + (data.body.expires_in * 1000);
+                } else {
+                    const data = await this.spotifyApi.clientCredentialsGrant();
+                    this.spotifyApi.setAccessToken(data.body.access_token);
+                    this.tokenExpiresAt = Date.now() + (data.body.expires_in * 1000);
+                }
             } catch (error) {
                 throw new Error('Spotify API authentication failed');
             }
@@ -141,51 +214,40 @@ class Spotify {
             const token = this.spotifyApi.getAccessToken();
             if (!token) throw new Error('No access token available');
 
-            // Fetch playlist tracks via direct REST call (bypasses library issues)
+            // Try API first (new /items endpoint, Feb 2026+)
             const mod = await import('node-fetch');
             const fetch = mod.default || mod;
-            const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=${config.bot.maxPlaylistSize}&market=TR`, {
+            const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/items?limit=${config.bot.maxPlaylistSize}&market=TR`, {
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
-            const body = await res.json();
-
-            const unknownTitle = guildId ? await LanguageManager.getTranslation(guildId, 'spotify.unknown_title') : 'Unknown Title';
-            const unknownArtist = guildId ? await LanguageManager.getTranslation(guildId, 'spotify.unknown_artist') : 'Unknown Artist';
-
-            const tracks = [];
-            const items = body?.items || [];
-            for (const item of items.slice(0, config.bot.maxPlaylistSize)) {
-                const track = item?.track;
-                if (!track || !track.id) continue;
-                const artists = track.artists?.map(a => a.name).join(', ') || unknownArtist;
-                const title = track.name || unknownTitle;
-
-                tracks.push({
-                    title,
-                    artist: artists,
-                    url: track.external_urls?.spotify || track.uri || `https://open.spotify.com/track/${track.id}`,
-                    spotifyUrl: track.external_urls?.spotify || track.uri || `https://open.spotify.com/track/${track.id}`,
-                    duration: Math.floor((track.duration_ms || 0) / 1000),
-                    thumbnail: track.album?.images?.[0]?.url,
-                    platform: 'spotify',
-                    type: 'track',
-                    id: track.id,
-                    searchQuery: `${title} ${artists}`,
-                });
+            if (res.ok) {
+                const body = await res.json();
+                const unknownTitle = guildId ? await LanguageManager.getTranslation(guildId, 'spotify.unknown_title') : 'Unknown Title';
+                const unknownArtist = guildId ? await LanguageManager.getTranslation(guildId, 'spotify.unknown_artist') : 'Unknown Artist';
+                const tracks = [];
+                const rawItems = body?.items || [];
+                for (const entry of rawItems.slice(0, config.bot.maxPlaylistSize)) {
+                    const track = entry?.item || entry?.track;
+                    if (!track || !track.id) continue;
+                    const artists = track.artists?.map(a => a.name).join(', ') || unknownArtist;
+                    const title = track.name || unknownTitle;
+                    tracks.push({
+                        title, artist: artists,
+                        url: track.external_urls?.spotify || track.uri || `https://open.spotify.com/track/${track.id}`,
+                        spotifyUrl: track.external_urls?.spotify || track.uri || `https://open.spotify.com/track/${track.id}`,
+                        duration: Math.floor((track.duration_ms || 0) / 1000),
+                        thumbnail: track.album?.images?.[0]?.url,
+                        platform: 'spotify', type: 'track', id: track.id,
+                        searchQuery: `${title} ${artists}`,
+                    });
+                }
+                if (tracks.length > 0) return tracks;
             }
-
-            // Fallback: if API returned no tracks, try web scrape
-            if (tracks.length === 0) {
-                return await this.scrapePlaylist(playlistId, guildId);
-            }
-
-            return tracks;
         } catch (error) {
-            console.error(`[Spotify] getPlaylist failed:`, error?.message || error);
-            // Try scraping as last fallback
-            return await this.scrapePlaylist(playlistId, guildId);
+            console.error(`[Spotify] getPlaylist API failed:`, error?.message || error);
         }
+        // Fallback: web scrape
+        return await this.scrapePlaylist(playlistId, guildId);
     }
 
     static async scrapePlaylist(playlistId, guildId = null) {
