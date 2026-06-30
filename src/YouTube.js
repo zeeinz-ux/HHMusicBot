@@ -3,27 +3,6 @@ const config = require('../config');
 const LanguageManager = require('./LanguageManager');
 
 class YouTube {
-    static _poToken = null;
-    static _poTokenPromise = null;
-
-    static async _ensurePoToken() {
-        if (this._poToken) return true;
-        if (this._poTokenPromise) return this._poTokenPromise;
-        this._poTokenPromise = (async () => {
-            try {
-                const { generate } = require('youtube-po-token-generator');
-                const { poToken, visitorData } = await generate();
-                this._poToken = poToken;
-                console.log(`[YouTube] Auto-generated PO token (${visitorData})`);
-                return true;
-            } catch (err) {
-                console.warn(`[YouTube] PO token generation failed: ${err.message}`);
-                return false;
-            }
-        })();
-        return this._poTokenPromise;
-    }
-
     // yt-dlp için ortak parametreleri döndüren yardımcı fonksiyon
     static getYtDlpOptions(extraOptions = {}) {
         const baseOptions = {
@@ -39,27 +18,20 @@ class YouTube {
             ...extraOptions
         };
 
-        // Auth öncelik sırası: PO Token (env) > Auto PO Token > Browser Cookie > Cookie Dosyası > iOS client
+        // Auth öncelik sırası: PO Token > Browser Cookie > Cookie Dosyası > iOS client (fallback)
         if (config.ytdl.poToken) {
             baseOptions.extractorArgs = `youtube:po_token=web+${config.ytdl.poToken};player_client=web`;
-        } else if (this._poToken) {
-            baseOptions.extractorArgs = `youtube:po_token=web+${this._poToken};player_client=web`;
         } else if (config.ytdl.cookiesFromBrowser) {
             baseOptions.cookiesFromBrowser = config.ytdl.cookiesFromBrowser;
         } else if (config.ytdl.cookiesFile) {
-            // Copy cookies to temp location to avoid read-only filesystem errors
             const fs = require('fs');
-            const tempCookies = `/tmp/cookies_${Date.now()}.txt`;
             if (fs.existsSync(config.ytdl.cookiesFile)) {
-                const stats = fs.statSync(config.ytdl.cookiesFile);
-                console.log(`[YouTube] Using cookies file (${stats.size} bytes)`);
-                fs.copyFileSync(config.ytdl.cookiesFile, tempCookies);
-                baseOptions.cookies = tempCookies;
-            } else {
-                console.warn(`[YouTube] Cookies file not found: ${config.ytdl.cookiesFile}`);
                 baseOptions.cookies = config.ytdl.cookiesFile;
+                baseOptions.extractorArgs = 'youtubetab:skip=authcheck';
+            } else {
+                console.warn(`[YouTube] Cookies file not found: ${config.ytdl.cookiesFile}, falling back to iOS client`);
+                baseOptions.extractorArgs = 'youtube:player_client=ios';
             }
-            baseOptions.extractorArgs = 'youtubetab:skip=authcheck';
         } else {
             // Auth yapılandırılmamışsa iOS client kullan.
             // Bu, VPS/sunucu IP'lerinde YouTube'un bot tespitini cookie veya token gerektirmeden atlar.
@@ -398,8 +370,5 @@ class YouTube {
         }
     }
 }
-
-// Start PO token generation on load (fire-and-forget)
-YouTube._ensurePoToken().catch(() => {});
 
 module.exports = YouTube;
