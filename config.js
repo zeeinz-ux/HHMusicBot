@@ -59,6 +59,7 @@ module.exports = {
         cookiesFromBrowser: process.env.COOKIES_FROM_BROWSER || null, // 'chrome', 'firefox', 'edge', 'safari'
         cookiesFile: process.env.COOKIES_FILE || null, // './cookies.txt'
         poToken: process.env.YOUTUBE_PO_TOKEN || null, // YouTube PO Token (sunucu IP'leri için)
+        proxy: process.env.YT_PROXY || process.env.YTDLP_PROXY || null, // Proxy URL: http://user:pass@host:port or socks5://host:port
     },
 
     // Sharding Settings (for bots in 1000+ servers)
