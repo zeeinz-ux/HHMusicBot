@@ -25,6 +25,7 @@
         "`/play <song/url>` - Play music (YouTube, Spotify, SoundCloud)",
         "`/search <query>` - Search and select music on YouTube",
         "`/nowplaying` - Information about the current song",
+        "`/queue` - Display the music queue",
         "`/skip` - Skip to the next song",
         "`/stop` - Stop the music and clear the queue",
         "`/pause` - Pause the music",
