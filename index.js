@@ -8,6 +8,17 @@ const PlayerStateManager = require('./src/PlayerStateManager');
 const MusicPlayer = require('./src/MusicPlayer');
 const chalk = require('chalk');
 
+// COOKIES_CONTENT env var → write to cookies file at startup
+if (process.env.COOKIES_CONTENT && config.ytdl.cookiesFile) {
+    const cookiesPath = path.resolve(config.ytdl.cookiesFile);
+    try {
+        fs.writeFileSync(cookiesPath, process.env.COOKIES_CONTENT, 'utf-8');
+        console.log(`[COOKIES] Written COOKIES_CONTENT to ${cookiesPath}`);
+    } catch (e) {
+        console.warn(`[COOKIES] Failed to write cookies file: ${e.message}`);
+    }
+}
+
 require("./src/commandLoader"); // Load and deploy commands
 
 // Clean up audio cache directory on startup
