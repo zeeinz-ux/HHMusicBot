@@ -95,6 +95,7 @@ class Spotify {
                     throw new Error(errorMsg);
             }
         } catch (error) {
+            console.error(`[Spotify] getFromURL failed for ${url}:`, error?.message || error);
             return [];
         }
     }
@@ -150,6 +151,7 @@ class Spotify {
 
             return tracks;
         } catch (error) {
+            console.error(`[Spotify] getPlaylist failed:`, error?.message || error);
             return [];
         }
     }
