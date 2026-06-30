@@ -743,6 +743,10 @@ class MusicPlayer {
             this.startTime = null; // Will be set when Playing event fires
 
             // Get audio stream - check preloaded first!
+            if (!this.currentTrack) {
+                const errorMsg = await LanguageManager.getTranslation(this.guild.id, 'musicplayer.no_tracks_in_queue');
+                return { success: false, message: errorMsg };
+            }
             let streamUrl = this.currentTrack.url;
             let streamInfo;
 

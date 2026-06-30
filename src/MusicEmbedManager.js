@@ -132,6 +132,9 @@ class MusicEmbedManager {
         const messageText = await this.createQueueAdditionMessage(remainingTracks, member.guild.id, isPlaylist);
 
         // Mesajı text channel'a gönder (interaction değil)
+        if (!player.textChannel) {
+            return { success: true, message: 'No text channel available' };
+        }
         let infoMessage;
         try {
             infoMessage = await player.textChannel.send({ content: messageText });
@@ -192,8 +195,10 @@ class MusicEmbedManager {
             } else {
                 infoMessage = await interaction.reply({ content: messageText, flags: [1 << 6] });
             }
-        } else {
+        } else if (player.textChannel) {
             infoMessage = await player.textChannel.send({ content: messageText });
+        } else {
+            return { success: true, message: 'No text channel available' };
         }
 
         // Bilgi mesajını 10 saniye sonra sil
