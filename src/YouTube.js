@@ -26,6 +26,7 @@ class YouTube {
             baseOptions.cookiesFromBrowser = config.ytdl.cookiesFromBrowser;
         } else if (config.ytdl.cookiesFile) {
             baseOptions.cookies = config.ytdl.cookiesFile;
+            baseOptions.extractorArgs = 'youtubetab:skip=authcheck';
         } else {
             // Auth yapılandırılmamışsa iOS client kullan.
             // Bu, VPS/sunucu IP'lerinde YouTube'un bot tespitini cookie veya token gerektirmeden atlar.
