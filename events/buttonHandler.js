@@ -110,6 +110,7 @@ module.exports = {
                     });
             }
         } catch (error) {
+            console.error(`❌ Button handler error (${interaction.customId}):`, error?.message || error);
 
             if (!interaction.replied && !interaction.deferred) {
                 try {
