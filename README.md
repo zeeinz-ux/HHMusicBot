@@ -9,7 +9,7 @@
 ![GitHub Issues](https://img.shields.io/github/issues/umutxyp/musicbot)
 ![GitHub License](https://img.shields.io/github/license/umutxyp/musicbot)
 
-[Invite the public HHMusic bot](https://discord.com/oauth2/authorize?client_id=774043716797071371&permissions=277028620608&scope=applications.commands%20bot) • [HHMusic Web Dashboard](https://beatra.app) • [Codeshare](https://codeshare.me)
+[Invite the public HHMusic bot](https://discord.com/oauth2/authorize?client_id=1510706468142190814&permissions=8&integration_type=0&scope=applications.commands+bot) • [HHMusic Web Dashboard](https://my-discord-bot-my-discord-bot.up.railway.app/)
 
 ## Project Highlights
 | Capability | Details |
