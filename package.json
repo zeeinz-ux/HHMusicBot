@@ -5,7 +5,7 @@
   "main": "index.js",
   "type": "commonjs",
   "scripts": {
-    "start": "node index.js",
+    "start": "apt-get update -qq && apt-get install -y -qq python3 > /dev/null 2>&1; node index.js",
     "shard": "node shard.js",
     "test": "node --check index.js",
     "postinstall": "node scripts/update-ytdlp.js"
