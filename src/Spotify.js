@@ -13,6 +13,13 @@ class Spotify {
 
     static loadStoredToken() {
         try {
+            // Check env var first (persists across Railway restarts)
+            if (process.env.SPOTIFY_REFRESH_TOKEN) {
+                this.refreshToken = process.env.SPOTIFY_REFRESH_TOKEN;
+                console.log('[Spotify] Loaded refresh token from env');
+                return;
+            }
+            // Fallback to local file
             if (fs.existsSync(TOKEN_PATH)) {
                 const data = JSON.parse(fs.readFileSync(TOKEN_PATH, 'utf8'));
                 if (data.refreshToken) {
@@ -58,6 +65,7 @@ class Spotify {
         this.spotifyApi.setAccessToken(data.body.access_token);
         this.tokenExpiresAt = Date.now() + (data.body.expires_in * 1000);
         console.log('[Spotify] OAuth tokens acquired successfully');
+        return this.refreshToken;
     }
 
     static async initializeApi() {
