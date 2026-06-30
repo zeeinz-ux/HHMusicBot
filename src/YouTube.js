@@ -24,7 +24,7 @@ class YouTube {
         // as a secondary in the cookies paths so a single blocked client does not
         // make the cookies path useless.
         if (config.ytdl.poToken) {
-            baseOptions.extractorArgs = `youtube:po_token=web+${config.ytdl.poToken};player_client=web`;
+            baseOptions.extractorArgs = `youtube:po_token=web+${config.ytdl.poToken};player_client=android,web`;
         } else if (config.ytdl.cookiesFromBrowser) {
             baseOptions.cookiesFromBrowser = config.ytdl.cookiesFromBrowser;
             baseOptions.extractorArgs = 'youtube:player_client=android,web';
@@ -190,10 +190,9 @@ class YouTube {
                 throw new Error(errorMsg);
             }
 
-            // Get stream URL with simple format
+            // Get stream URL (use default format)
             const info = await youtubedl(url, this.getYtDlpOptions({
                 dumpSingleJson: true,
-                format: 'bestaudio*',
             }));
 
             if (!info || !info.url) {
