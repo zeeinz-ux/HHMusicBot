@@ -140,6 +140,11 @@ class Spotify {
             const playlistInfo = await this.spotifyApi.getPlaylist(playlistId);
             const tracks = [];
 
+            if (!playlistInfo.body.tracks) {
+                console.error(`[Spotify] Unexpected playlist response structure:`, Object.keys(playlistInfo.body));
+                return [];
+            }
+
             for (const item of playlistInfo.body.tracks.items.slice(0, config.bot.maxPlaylistSize)) {
                 if (item.track && item.track.type === 'track') {
                     const formattedTrack = await this.formatTrack(item.track, guildId);
