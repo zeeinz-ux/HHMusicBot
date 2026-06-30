@@ -275,12 +275,8 @@ class MusicEmbedManager {
             embed.setThumbnail(track.thumbnail);
         }
 
-        // Permission info and Queue info in footer
+        // Queue info in footer
         const footerParts = [];
-        
-        // Add permission info
-        const permissionInfo = await LanguageManager.getTranslation(guildId, 'musicmanager.control_permission_info');
-        footerParts.push(permissionInfo);
         
         // Add queue info if available
         if (player.queue.length > 0) {

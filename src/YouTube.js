@@ -19,15 +19,25 @@ class YouTube {
         };
 
         // Auth öncelik sırası: PO Token > Browser Cookie > Cookie Dosyası > Android client (fallback)
+        // android works without a JS runtime on yt-dlp ≥ 2026.04 and returns a real
+        // googlevideo.com audio URL (itag 251 webm/opus). It is paired with `web`
+        // as a secondary in the cookies paths so a single blocked client does not
+        // make the cookies path useless.
         if (config.ytdl.poToken) {
             baseOptions.extractorArgs = `youtube:po_token=web+${config.ytdl.poToken};player_client=web`;
         } else if (config.ytdl.cookiesFromBrowser) {
             baseOptions.cookiesFromBrowser = config.ytdl.cookiesFromBrowser;
+            baseOptions.extractorArgs = 'youtube:player_client=android,web';
         } else if (config.ytdl.cookiesFile) {
             const fs = require('fs');
             if (fs.existsSync(config.ytdl.cookiesFile)) {
                 baseOptions.cookies = config.ytdl.cookiesFile;
-                baseOptions.extractorArgs = 'youtubetab:skip=authcheck';
+                baseOptions.extractorArgs = 'youtubetab:skip=authcheck;youtube:player_client=android,web';
+            } else {
+                // BUG FIX: previously this branch silently fell through to yt-dlp's
+                // default client, which on a bot-gated IP = "Sign in to confirm".
+                console.warn(`[YouTube] cookies.txt not found at ${config.ytdl.cookiesFile}, falling back to android client`);
+                baseOptions.extractorArgs = 'youtube:player_client=android';
             }
         } else {
             // Android client — paling ringan, jarang kena bot check di IP datacenter
@@ -41,9 +51,27 @@ class YouTube {
         return baseOptions;
     }
 
+    // Logs the bundled yt-dlp binary version once per process. Useful for diagnosing
+    // "is the binary stale?" regressions like the 2026.04 iOS-PO-Token requirement.
+    static _loggedBinaryVersion = false;
+    static async _logBinaryVersionOnce() {
+        if (this._loggedBinaryVersion) return;
+        this._loggedBinaryVersion = true;
+        try {
+            const { execFileSync } = require('child_process');
+            const path = require('path');
+            const bin = path.join(__dirname, '..', 'node_modules', 'youtube-dl-exec', 'bin',
+                process.platform === 'win32' ? 'yt-dlp.exe' : 'yt-dlp');
+            const ver = execFileSync(bin, ['--version'], { encoding: 'utf8', timeout: 5000 }).trim();
+            console.log(`[YouTube] yt-dlp binary version: ${ver}`);
+        } catch (e) {
+            console.warn(`[YouTube] Could not detect yt-dlp binary version: ${e.message}`);
+        }
+    }
+
     static async search(query, limit = 1, guildId = null) {
         try {
-
+            await this._logBinaryVersionOnce();
 
             // If it's already a YouTube URL, get info directly
             if (this.isYouTubeURL(query)) {
@@ -114,7 +142,7 @@ class YouTube {
 
     static async getInfo(url, guildId = null) {
         try {
-
+            await this._logBinaryVersionOnce();
 
             const info = await youtubedl(url, this.getYtDlpOptions({
                 dumpSingleJson: true,
@@ -155,7 +183,7 @@ class YouTube {
 
     static async getStream(url, guildId = null, startSeconds = 0) {
         try {
-
+            await this._logBinaryVersionOnce();
 
             if (!url) {
                 const errorMsg = guildId ? await LanguageManager.getTranslation(guildId, 'youtube.url_required') : 'URL is required';
