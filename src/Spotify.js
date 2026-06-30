@@ -137,23 +137,7 @@ class Spotify {
 
     static async getPlaylist(playlistId, guildId = null) {
         try {
-            const playlistInfo = await this.spotifyApi.getPlaylist(playlistId);
-            const tracks = [];
-
-            if (!playlistInfo.body.tracks) {
-                console.error(`[Spotify] Unexpected playlist response structure:`, Object.keys(playlistInfo.body));
-                return [];
-            }
-
-            for (const item of playlistInfo.body.tracks.items.slice(0, config.bot.maxPlaylistSize)) {
-                if (item.track && item.track.type === 'track') {
-                    const formattedTrack = await this.formatTrack(item.track, guildId);
-                    if (formattedTrack) {
-                        tracks.push(formattedTrack);
-                    }
-                }
-            }
-
+            const tracks = await this.getPlaylistTracks(playlistId, guildId);
             return tracks;
         } catch (error) {
             console.error(`[Spotify] getPlaylist failed:`, error?.message || error);
@@ -221,6 +205,7 @@ class Spotify {
 
             return tracks;
         } catch (error) {
+            console.error(`[Spotify] getPlaylistTracks failed:`, error?.message || error);
             return [];
         }
     }
