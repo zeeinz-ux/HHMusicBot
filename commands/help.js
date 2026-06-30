@@ -141,15 +141,18 @@ module.exports = {
             });
 
             // Buttons
+            const safeWebsite = config.bot.website && config.bot.website.startsWith('http') ? config.bot.website : config.bot.invite;
+            const safeSupport = config.bot.supportServer && config.bot.supportServer.startsWith('http') ? config.bot.supportServer : 'https://discord.gg/ACJQzJuckW';
+
             const row = new ActionRowBuilder()
                 .addComponents(
                     new ButtonBuilder()
                         .setLabel(t.buttonWebsite)
-                        .setURL(config.bot.website)
+                        .setURL(safeWebsite)
                         .setStyle(ButtonStyle.Link),
                     new ButtonBuilder()
                         .setLabel(t.buttonSupport)
-                        .setURL(config.bot.supportServer)
+                        .setURL(safeSupport)
                         .setStyle(ButtonStyle.Link),
                     new ButtonBuilder()
                         .setCustomId('help_refresh')
