@@ -3,6 +3,27 @@ const config = require('../config');
 const LanguageManager = require('./LanguageManager');
 
 class YouTube {
+    static _poToken = null;
+    static _poTokenPromise = null;
+
+    static async _ensurePoToken() {
+        if (this._poToken) return true;
+        if (this._poTokenPromise) return this._poTokenPromise;
+        this._poTokenPromise = (async () => {
+            try {
+                const { generate } = require('youtube-po-token-generator');
+                const { poToken, visitorData } = await generate();
+                this._poToken = poToken;
+                console.log(`[YouTube] Auto-generated PO token (${visitorData})`);
+                return true;
+            } catch (err) {
+                console.warn(`[YouTube] PO token generation failed: ${err.message}`);
+                return false;
+            }
+        })();
+        return this._poTokenPromise;
+    }
+
     // yt-dlp için ortak parametreleri döndüren yardımcı fonksiyon
     static getYtDlpOptions(extraOptions = {}) {
         const baseOptions = {
@@ -18,10 +39,11 @@ class YouTube {
             ...extraOptions
         };
 
-        // Auth öncelik sırası: PO Token > Browser Cookie > Cookie Dosyası > iOS client (fallback)
+        // Auth öncelik sırası: PO Token (env) > Auto PO Token > Browser Cookie > Cookie Dosyası > iOS client
         if (config.ytdl.poToken) {
-            // PO Token varsa web client'ı ile yüksek kaliteli stream
             baseOptions.extractorArgs = `youtube:po_token=web+${config.ytdl.poToken};player_client=web`;
+        } else if (this._poToken) {
+            baseOptions.extractorArgs = `youtube:po_token=web+${this._poToken};player_client=web`;
         } else if (config.ytdl.cookiesFromBrowser) {
             baseOptions.cookiesFromBrowser = config.ytdl.cookiesFromBrowser;
         } else if (config.ytdl.cookiesFile) {
@@ -376,5 +398,8 @@ class YouTube {
         }
     }
 }
+
+// Start PO token generation on load (fire-and-forget)
+YouTube._ensurePoToken().catch(() => {});
 
 module.exports = YouTube;
