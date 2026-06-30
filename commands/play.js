@@ -45,12 +45,19 @@ module.exports = {
             player.voiceChannel = member.voice.channel;
             player.textChannel = channel;
 
+            // Join voice immediately (parallel with data fetch)
+            const connectPromise = player.connection ? Promise.resolve() : player.connect().catch(err => {
+                console.error('Voice connect error:', err);
+                return null;
+            });
+
             // Arama mesajı gönder
             const searchingMsg = await LanguageManager.getTranslation(guild.id, 'commands.play.searching_desc', { query });
             await interaction.editReply({ content: searchingMsg });
 
             // Sadece müzik verilerini al (player'a ekleme yapma)
             const trackData = await this.getTrackData(query, guild.id);
+            await connectPromise;
 
             if (!trackData.success) {
                 return await interaction.editReply({
