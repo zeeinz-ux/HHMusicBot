@@ -13,7 +13,7 @@ class YouTube {
             // User-Agent header ekle
             addHeader: [
                 'referer:youtube.com',
-                'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+                'user-agent:Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/126.0.0.0 Safari/537.36'
             ],
             ...extraOptions
         };
@@ -28,14 +28,7 @@ class YouTube {
             if (fs.existsSync(config.ytdl.cookiesFile)) {
                 baseOptions.cookies = config.ytdl.cookiesFile;
                 baseOptions.extractorArgs = 'youtubetab:skip=authcheck';
-            } else {
-                console.warn(`[YouTube] Cookies file not found: ${config.ytdl.cookiesFile}, falling back to iOS client`);
-                baseOptions.extractorArgs = 'youtube:player_client=ios';
             }
-        } else {
-            // Auth yapılandırılmamışsa iOS client kullan.
-            // Bu, VPS/sunucu IP'lerinde YouTube'un bot tespitini cookie veya token gerektirmeden atlar.
-            baseOptions.extractorArgs = 'youtube:player_client=ios';
         }
 
         return baseOptions;
