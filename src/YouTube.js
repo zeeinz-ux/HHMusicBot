@@ -29,9 +29,12 @@ class YouTube {
             const fs = require('fs');
             const tempCookies = `/tmp/cookies_${Date.now()}.txt`;
             if (fs.existsSync(config.ytdl.cookiesFile)) {
+                const stats = fs.statSync(config.ytdl.cookiesFile);
+                console.log(`[YouTube] Using cookies file (${stats.size} bytes)`);
                 fs.copyFileSync(config.ytdl.cookiesFile, tempCookies);
                 baseOptions.cookies = tempCookies;
             } else {
+                console.warn(`[YouTube] Cookies file not found: ${config.ytdl.cookiesFile}`);
                 baseOptions.cookies = config.ytdl.cookiesFile;
             }
             baseOptions.extractorArgs = 'youtubetab:skip=authcheck';
