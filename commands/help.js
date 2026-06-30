@@ -164,6 +164,7 @@ module.exports = {
             });
 
         } catch (error) {
+            console.error('❌ /help error:', error);
 
             const guildId = interaction.guild.id;
             const errorTitle = await LanguageManager.getTranslation(guildId, 'commands.help.error_title');
