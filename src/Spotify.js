@@ -137,11 +137,53 @@ class Spotify {
 
     static async getPlaylist(playlistId, guildId = null) {
         try {
-            const tracks = await this.getPlaylistTracks(playlistId, guildId);
+            const youtubedl = require('./ytdlp-exec');
+            const url = `https://open.spotify.com/playlist/${playlistId}`;
+            const info = await youtubedl(url, {
+                dumpSingleJson: true,
+                flatPlaylist: true,
+                noCheckCertificates: true,
+                noWarnings: true,
+            });
+
+            if (!info || !info.entries || info.entries.length === 0) {
+                return await this.getPlaylistTracks(playlistId, guildId);
+            }
+
+            const unknownTitle = guildId ? await LanguageManager.getTranslation(guildId, 'spotify.unknown_title') : 'Unknown Title';
+            const unknownArtist = guildId ? await LanguageManager.getTranslation(guildId, 'spotify.unknown_artist') : 'Unknown Artist';
+
+            const tracks = [];
+            for (const entry of info.entries.slice(0, config.bot.maxPlaylistSize)) {
+                if (entry && (entry.id || entry.url)) {
+                    try {
+                        const track = {
+                            title: entry.title || entry.fulltitle || unknownTitle,
+                            artist: entry.uploader || entry.channel || entry.artist || unknownArtist,
+                            url: entry.webpage_url || entry.url || `https://open.spotify.com/track/${entry.id}`,
+                            spotifyUrl: entry.webpage_url || entry.url || `https://open.spotify.com/track/${entry.id}`,
+                            duration: entry.duration || 0,
+                            thumbnail: entry.thumbnail,
+                            platform: 'spotify',
+                            type: 'track',
+                            id: entry.id,
+                            searchQuery: `${entry.title || ''} ${entry.uploader || entry.channel || ''}`,
+                        };
+                        tracks.push(track);
+                    } catch (e) {
+                        continue;
+                    }
+                }
+            }
+
+            if (tracks.length === 0) {
+                return await this.getPlaylistTracks(playlistId, guildId);
+            }
+
             return tracks;
         } catch (error) {
-            console.error(`[Spotify] getPlaylist failed:`, error?.message || error);
-            return [];
+            console.error(`[Spotify] getPlaylist failed, falling back to API:`, error?.message || error);
+            return await this.getPlaylistTracks(playlistId, guildId);
         }
     }
 
