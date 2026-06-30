@@ -125,6 +125,10 @@ async function restoreSavedPlayers(client) {
 
 // Don't cleanup audio cache yet - wait until after we check saved states
 setTimeout(() => {
+    // Health check server for Render
+    const http = require('http');
+    http.createServer((req, res) => res.end('ok')).listen(process.env.PORT || 3000);
+
     const client = new Client({
         intents: [
             GatewayIntentBits.Guilds,
