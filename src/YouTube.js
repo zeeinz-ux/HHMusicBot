@@ -37,7 +37,7 @@ class YouTube {
                 console.warn(`[YouTube] Cookies file not found: ${config.ytdl.cookiesFile}`);
                 baseOptions.cookies = config.ytdl.cookiesFile;
             }
-            baseOptions.extractorArgs = 'youtubetab:skip=authcheck';
+            baseOptions.extractorArgs = 'youtube:player_client=web;youtubetab:skip=authcheck';
         } else {
             // Auth yapılandırılmamışsa iOS client kullan.
             // Bu, VPS/sunucu IP'lerinde YouTube'un bot tespitini cookie veya token gerektirmeden atlar.
