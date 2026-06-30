@@ -14,7 +14,7 @@ npm test                          # node --check index.js (syntax check only, no
 
 - **Entrypoints**: `index.js` (main), `shard.js` (sharding manager spawning `index.js` workers)
 - **Config**: `config.js` reads from `.env` via `dotenv`
-- **Commands**: `commands/` — 5 slash commands (`play`, `search`, `nowplaying`, `language`, `help`)
+- **Commands**: `commands/` — 11 slash commands (`play`, `search`, `nowplaying`, `skip`, `stop`, `pause`, `resume`, `shuffle`, `loop`, `language`, `help`)
 - **Core engine**: `src/MusicPlayer.js` (~2000 lines), `src/PlayerStateManager.js` (crash recovery)
 - **Music sources**: `src/YouTube.js`, `src/Spotify.js`, `src/SoundCloud.js`, `src/DirectLink.js`
 - **Persistence**: `database/` — JSON files (`languages.json`, `playerState.json`)
