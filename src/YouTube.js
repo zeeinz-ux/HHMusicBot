@@ -18,7 +18,7 @@ class YouTube {
             ...extraOptions
         };
 
-        // Auth öncelik sırası: PO Token > Browser Cookie > Cookie Dosyası > iOS client (fallback)
+        // Auth öncelik sırası: PO Token > Browser Cookie > Cookie Dosyası > Android client (fallback)
         if (config.ytdl.poToken) {
             baseOptions.extractorArgs = `youtube:po_token=web+${config.ytdl.poToken};player_client=web`;
         } else if (config.ytdl.cookiesFromBrowser) {
@@ -29,6 +29,9 @@ class YouTube {
                 baseOptions.cookies = config.ytdl.cookiesFile;
                 baseOptions.extractorArgs = 'youtubetab:skip=authcheck';
             }
+        } else {
+            // Android client — paling ringan, jarang kena bot check di IP datacenter
+            baseOptions.extractorArgs = 'youtube:player_client=android';
         }
 
         return baseOptions;
