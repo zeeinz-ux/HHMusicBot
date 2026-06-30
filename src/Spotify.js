@@ -138,25 +138,34 @@ class Spotify {
     static async getPlaylist(playlistId, guildId = null) {
         try {
             await this.initializeApi();
-            const data = await this.spotifyApi.getPlaylist(playlistId, { fields: 'name,tracks.items(track(name,artists(name),id,uri,duration_ms,album(images)))' });
-            const body = data.body;
+            const token = this.spotifyApi.getAccessToken();
+            if (!token) throw new Error('No access token available');
+
+            // Fetch playlist tracks via direct REST call (bypasses library issues)
+            const mod = await import('node-fetch');
+            const fetch = mod.default || mod;
+            const res = await fetch(`https://api.spotify.com/v1/playlists/${playlistId}/tracks?limit=${config.bot.maxPlaylistSize}&market=TR`, {
+                headers: { 'Authorization': `Bearer ${token}` }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status} ${res.statusText}`);
+            const body = await res.json();
 
             const unknownTitle = guildId ? await LanguageManager.getTranslation(guildId, 'spotify.unknown_title') : 'Unknown Title';
             const unknownArtist = guildId ? await LanguageManager.getTranslation(guildId, 'spotify.unknown_artist') : 'Unknown Artist';
 
             const tracks = [];
-            const items = body?.tracks?.items || [];
+            const items = body?.items || [];
             for (const item of items.slice(0, config.bot.maxPlaylistSize)) {
                 const track = item?.track;
-                if (!track) continue;
+                if (!track || !track.id) continue;
                 const artists = track.artists?.map(a => a.name).join(', ') || unknownArtist;
                 const title = track.name || unknownTitle;
 
                 tracks.push({
                     title,
                     artist: artists,
-                    url: track.uri || `https://open.spotify.com/track/${track.id}`,
-                    spotifyUrl: track.uri || `https://open.spotify.com/track/${track.id}`,
+                    url: track.external_urls?.spotify || track.uri || `https://open.spotify.com/track/${track.id}`,
+                    spotifyUrl: track.external_urls?.spotify || track.uri || `https://open.spotify.com/track/${track.id}`,
                     duration: Math.floor((track.duration_ms || 0) / 1000),
                     thumbnail: track.album?.images?.[0]?.url,
                     platform: 'spotify',
@@ -166,12 +175,66 @@ class Spotify {
                 });
             }
 
-            if (tracks.length > 0) return tracks;
+            // Fallback: if API returned no tracks, try web scrape
+            if (tracks.length === 0) {
+                return await this.scrapePlaylist(playlistId, guildId);
+            }
 
-            return await this.getPlaylistTracks(playlistId, guildId);
+            return tracks;
         } catch (error) {
-            console.error(`[Spotify] getPlaylist failed, falling back to API:`, error?.message || error);
-            return await this.getPlaylistTracks(playlistId, guildId);
+            console.error(`[Spotify] getPlaylist failed:`, error?.message || error);
+            // Try scraping as last fallback
+            return await this.scrapePlaylist(playlistId, guildId);
+        }
+    }
+
+    static async scrapePlaylist(playlistId, guildId = null) {
+        try {
+            const mod = await import('node-fetch');
+            const fetch = mod.default || mod;
+            const res = await fetch(`https://open.spotify.com/playlist/${playlistId}`, {
+                headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+            });
+            if (!res.ok) throw new Error(`HTTP ${res.status}`);
+            const html = await res.text();
+
+            const match = html.match(/<script[^>]*id="__NEXT_DATA__"[^>]*>(.*?)<\/script>/);
+            if (!match) throw new Error('No __NEXT_DATA__');
+            const jsonData = JSON.parse(match[1]);
+
+            const contents = jsonData?.props?.pageProps?.state?.data?.entity?.data?.body?.rows?.[0]?.columns?.[1]?.rows?.[0]?.row?.contents;
+            let items = contents?.[0]?.row?.items || [];
+            if (items.length === 0) items = contents?.flatMap(c => c.row?.items || []) || [];
+
+            const unknownTitle = guildId ? await LanguageManager.getTranslation(guildId, 'spotify.unknown_title') : 'Unknown Title';
+            const unknownArtist = guildId ? await LanguageManager.getTranslation(guildId, 'spotify.unknown_artist') : 'Unknown Artist';
+
+            const tracks = [];
+            for (const item of items.slice(0, config.bot.maxPlaylistSize)) {
+                try {
+                    const td = item?.track || item?.item?.track || item;
+                    const artists = (td?.artists?.items || td?.artists || []).map(a => a?.profile?.name || a?.name || '').filter(Boolean).join(', ') || unknownArtist;
+                    const title = td?.name || td?.title || unknownTitle;
+                    const trackId = td?.id || td?.uri?.split(':').pop() || '';
+                    if (!trackId) continue;
+                    tracks.push({
+                        title,
+                        artist: artists,
+                        url: `https://open.spotify.com/track/${trackId}`,
+                        spotifyUrl: `https://open.spotify.com/track/${trackId}`,
+                        duration: Math.floor((td?.duration?.totalMilliseconds || 0) / 1000),
+                        thumbnail: td?.album?.images?.[0]?.url || td?.cover?.sources?.[0]?.url,
+                        platform: 'spotify',
+                        type: 'track',
+                        id: trackId,
+                        searchQuery: `${title} ${artists}`,
+                    });
+                } catch (e) {}
+            }
+            return tracks;
+        } catch (error) {
+            console.error(`[Spotify] scrapePlaylist failed:`, error?.message || error);
+            return [];
         }
     }
 
