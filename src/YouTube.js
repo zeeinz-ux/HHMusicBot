@@ -1,4 +1,4 @@
-const youtubedl = require('youtube-dl-exec');
+const youtubedl = require('./ytdlp-exec');
 const config = require('../config');
 const LanguageManager = require('./LanguageManager');
 

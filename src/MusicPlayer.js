@@ -609,7 +609,7 @@ class MusicPlayer {
 
             // For YouTube, Spotify (via YouTube), SoundCloud (via YouTube) - use youtube-dl-exec
             if (track.platform === 'youtube' || track.platform === 'spotify' || track.platform === 'soundcloud') {
-                const youtubedl = require('youtube-dl-exec');
+                const youtubedl = require('./ytdlp-exec');
                 
                 await youtubedl(downloadUrl, {
                     output: filepath,
